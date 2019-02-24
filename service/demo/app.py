@@ -39,6 +39,20 @@ def load_config(fname):
         data = yaml.load(f)
     return data
 
+
+async def init(loop):
+    conf = load_config(PROJ_ROOT / 'config' / 'config.yml')
+    app = web.Application(loop=loop)
+    mongo = await setup_mongo(app, conf, loop)
+    aiohttp_jinja2.setup(app,
+                         loader=jinja2.PackageLoader('demo', 'templates')
+                         )
+    handler = SiteHandler(mongo)
+    setup_routes(app, handler, PROJ_ROOT)
+    host, port = conf['host'], conf['port']
+    return app, host, port
+
+
 # async def create_app():
 #     app = web.Application()
 #     aiohttp_jinja2.setup(app,
@@ -90,26 +104,4 @@ def load_config(fname):
 #     result = await db.test_collection.insert(document)
 #     print('result %s' % repr(result.inserted_id))
 
-
-async def init(loop):
-    conf = load_config(PROJ_ROOT / 'config' / 'config.yml')
-    app = web.Application(loop=loop)
-    mongo = await setup_mongo(app, conf, loop)
-    aiohttp_jinja2.setup(app,
-                         loader=jinja2.PackageLoader('demo', 'templates')
-                         )
-    handler = SiteHandler(mongo)
-    setup_routes(app, handler, PROJ_ROOT)
-    host, port = conf['host'], conf['port']
-    return app, host, port
-
-
-# def main():
-#     loop = asyncio.get_event_loop()
-#     app, host, port = loop.run_until_complete(init(loop))
-#     web.run_app(app, host=host, port=port)
-#
-#
-# if __name__ == '__main__':
-#     main()
 
