@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+   mongo:
+     image: mongo
+     ports:
+       - 27017:27017
+
+   app:
+     restart: always
+     command: 'bash -c "python3 server.py"'
+     build:
+       dockerfile: "Dockerfile"
+       context: "./service"
+     ports:
+       - 8080:8080
+     depends_on:
+       - mongo

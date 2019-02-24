@@ -1,0 +1,6 @@
+.idea
+service/.idea
+.idea/*
+*.pyc
+/.idea
+/venv/
