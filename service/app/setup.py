@@ -6,7 +6,7 @@ import motor.motor_asyncio as aiomotor
 import jinja2
 from aiohttp import web
 from .routes import setup_routes
-from .views.frontend import SiteHandler
+from .views import SiteHandler
 
 
 PROJ_ROOT = pathlib.Path(__file__).parent.parent
@@ -18,7 +18,6 @@ async def init_mongo(conf, loop):
     mongo_uri = "mongodb://{}:{}".format(conf['host'], conf['port'])
     conn = aiomotor.AsyncIOMotorClient(
         mongo_uri,
-        # maxPoolSize=conf['max_pool_size'],
         io_loop=loop)
     db_name = conf['database']
     return conn[db_name]
@@ -45,7 +44,7 @@ async def init(loop):
     app = web.Application(loop=loop)
     mongo = await setup_mongo(app, conf, loop)
     aiohttp_jinja2.setup(app,
-                         loader=jinja2.PackageLoader('demo', 'templates')
+                         loader=jinja2.PackageLoader('app', 'templates')
                          )
     handler = SiteHandler(mongo)
     setup_routes(app, handler, PROJ_ROOT)
@@ -56,7 +55,7 @@ async def init(loop):
 # async def create_app():
 #     app = web.Application()
 #     aiohttp_jinja2.setup(app,
-#                          loader=jinja2.PackageLoader('demo', 'templates')
+#                          loader=jinja2.PackageLoader('app', 'templates')
 #                          )
 #     setup_routes(app)
 #     return app
@@ -73,7 +72,7 @@ async def init(loop):
 #
 #     app.on_cleanup.append(cleanup)
 #     aiohttp_jinja2.setup(app,
-#                          loader=jinja2.PackageLoader('demo', 'templates')
+#                          loader=jinja2.PackageLoader('app', 'templates')
 #                          )
 #     setup_routes(app)
 #     return app
@@ -93,7 +92,7 @@ async def init(loop):
 #     print(posts.find_one({"author": "Roman"}))
 #     app['db'] = posts
 #     aiohttp_jinja2.setup(app,
-#                          loader=jinja2.PackageLoader('demo', 'templates')
+#                          loader=jinja2.PackageLoader('app', 'templates')
 #                          )
 #     setup_routes(app)
 #     return app

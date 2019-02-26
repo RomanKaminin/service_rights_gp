@@ -1,6 +1,6 @@
 from aiohttp import web
 import asyncio
-from demo.app import init as app_init
+from app.setup import init as app_init
 
 
 def main():
