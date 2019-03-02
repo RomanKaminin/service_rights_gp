@@ -5,6 +5,9 @@ from .models import Entry
 import requests
 import re
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
 DETAILS = ["Подробнее…", "View details"]
 
@@ -31,14 +34,39 @@ class SiteHandler:
                 r'((https|http):\/\/)(play\.google\.com\/store\/apps\/details\?id=)?(.*)?(&hl=ru|&hl=en)?$', req_url)\
                 and error is None:
             #делаем запрос проверяем нет ли в базе
-            result = requests.get(req_url)
-            page = result.text
+            # options = Options()
+            # options.add_argument("--headless")
+            # driver = webdriver.Chrome('C:\chromedriver\chromedriver.exe',
+            #                           chrome_options=options)  # Optional argument, if not specified will search path.
+            # driver.get(url)
+            # soup = BeautifulSoup(driver.page_source)
+            driver = webdriver.Chrome(ChromeDriverManager().install())
+            # driver = webdriver.Chrome()
+            options = Options()
+            options.add_argument("--headless")
+            driver = webdriver.Chrome("/usr/lib/chromium-browser/chromedriver", chrome_options=options)
+            driver.get(req_url)
+            page = driver.page_source
+
+
+            # result = requests.get(req_url)
+            # page = result.text
             soup = BeautifulSoup(page, 'html.parser')
-            person = {}
 
             for div in soup.find_all("a", class_="hrTbp"):
                 if div.text in DETAILS:
-                    raise Exception('нашёл!')
+                    # делаем клик открывается новы html
+                    result_data = {}
+                    for div_permissions in soup.find_all("div", class_="yk0PFc"):
+                        raise Exception('нашёл! yk0PFc')
+                        title_div = div_permissions.find('div', attrs={'class': 'tDgPAd'})
+                        key_block = title_div.find('span', class_='text').text
+                        values_block = []
+                        for li in div_permissions.find_all('li', class_='NLTG4'):
+                            values_block.append(li.text)
+                        entry_permission = {key_block: values_block}
+                        result_data.update(entry_permission)
+
 
             # парсим и забираем данные
 
