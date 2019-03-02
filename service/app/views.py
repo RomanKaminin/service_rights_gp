@@ -2,15 +2,11 @@ import aiohttp
 import aiohttp_jinja2
 import datetime
 from .models import Entry
-from aiohttp_jinja2 import template
+import requests
+import re
+from bs4 import BeautifulSoup
 
-
-# routes = aiohttp.web.RouteTableDef()
-
-# @template('index.html')
-# async def index(request):
-#     return {}
-#     # return aiohttp.web.Response(text="ok")
+DETAILS = ["Подробнее…", "View details"]
 
 
 class SiteHandler:
@@ -29,11 +25,23 @@ class SiteHandler:
     async def get_data(self, request):
         form = await request.post()
         error = await validate_form(form)
-        # обработка запроса
-        # парсить адрес
-        # делать запрос
-        # забирать данные
-        if error is None and form.get('test'):
+        req_url = form.get('test')
+
+        if re.match(
+                r'((https|http):\/\/)(play\.google\.com\/store\/apps\/details\?id=)?(.*)?(&hl=ru|&hl=en)?$', req_url)\
+                and error is None:
+            #делаем запрос проверяем нет ли в базе
+            result = requests.get(req_url)
+            page = result.text
+            soup = BeautifulSoup(page, 'html.parser')
+            person = {}
+
+            for div in soup.find_all("a", class_="hrTbp"):
+                if div.text in DETAILS:
+                    raise Exception('нашёл!')
+
+            # парсим и забираем данные
+
             data = {
                 'id': form.get('test'),
                 'time': datetime.datetime.utcnow(),
@@ -54,6 +62,7 @@ class SiteHandler:
                 #          # 'other': data['Other'],
                 #          }
             }
+            # запись в базу
             entry = Entry(self.mongo)
             await entry.save(data=data)
             #забирать данные из базы, писать в переменную и отправлять в шаблон с таблицей

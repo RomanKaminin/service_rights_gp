@@ -5,3 +5,5 @@ pytest==2.8.5
 motor==0.5b0
 aiohttp-jinja2
 yaml-config==0.1.1
+requests==2.21.0
+beautifulsoup4==4.7.1
