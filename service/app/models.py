@@ -14,7 +14,7 @@ class Entry:
         )
         return result
 
-    async def get_messages(self, entry_id):
-        entry = self.collection.find().sort([('id', entry_id)])
-        return await entry.to_list(length=None)
+    async def exists_entry(self, entry_id):
+        entry = self.collection.find_one({'id': entry_id})
+        return entry
 
