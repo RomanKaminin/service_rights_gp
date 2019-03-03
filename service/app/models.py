@@ -8,7 +8,9 @@ class Entry:
     async def save(self, data, **kw):
         result = await self.collection.insert(
             {'id': data['id'],
-             'time': datetime.datetime.utcnow()}
+             'app_data': data['app_data'],
+             'time': datetime.datetime.utcnow()
+             }
         )
         return result
 

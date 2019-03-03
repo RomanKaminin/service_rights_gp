@@ -1,4 +1,4 @@
-aiohttp
+aiohttp==3.5.4
 pep8==1.7.0
 pymongo==2.8.0
 pytest==2.8.5
@@ -7,3 +7,6 @@ aiohttp-jinja2
 yaml-config==0.1.1
 requests==2.21.0
 beautifulsoup4==4.7.1
+webdriver_manager==1.7
+selenium==3.141.0
+bson==0.5.8

@@ -2,12 +2,11 @@ import aiohttp
 import aiohttp_jinja2
 import datetime
 from .models import Entry
-import requests
 import re
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
+from bson import json_util
+import json
 
 DETAILS = ["Подробнее…", "View details"]
 
@@ -29,70 +28,30 @@ class SiteHandler:
         form = await request.post()
         error = await validate_form(form)
         req_url = form.get('test')
-
+        app_id = form.get('test').split('id=')[1]
         if re.match(
                 r'((https|http):\/\/)(play\.google\.com\/store\/apps\/details\?id=)?(.*)?(&hl=ru|&hl=en)?$', req_url)\
                 and error is None:
-            #делаем запрос проверяем нет ли в базе
-            # options = Options()
-            # options.add_argument("--headless")
-            # driver = webdriver.Chrome('C:\chromedriver\chromedriver.exe',
-            #                           chrome_options=options)  # Optional argument, if not specified will search path.
-            # driver.get(url)
-            # soup = BeautifulSoup(driver.page_source)
+            #делаем запрос проверяем нет ли в базе по app_id
             driver = webdriver.Chrome(ChromeDriverManager().install())
-            # driver = webdriver.Chrome()
-            options = Options()
-            options.add_argument("--headless")
-            driver = webdriver.Chrome("/usr/lib/chromium-browser/chromedriver", chrome_options=options)
             driver.get(req_url)
-            page = driver.page_source
-
-
-            # result = requests.get(req_url)
-            # page = result.text
-            soup = BeautifulSoup(page, 'html.parser')
-
-            for div in soup.find_all("a", class_="hrTbp"):
-                if div.text in DETAILS:
-                    # делаем клик открывается новы html
-                    result_data = {}
-                    for div_permissions in soup.find_all("div", class_="yk0PFc"):
-                        raise Exception('нашёл! yk0PFc')
-                        title_div = div_permissions.find('div', attrs={'class': 'tDgPAd'})
-                        key_block = title_div.find('span', class_='text').text
-                        values_block = []
-                        for li in div_permissions.find_all('li', class_='NLTG4'):
-                            values_block.append(li.text)
-                        entry_permission = {key_block: values_block}
-                        result_data.update(entry_permission)
-
-
-            # парсим и забираем данные
-
+            driver.find_elements_by_css_selector('a.hrTbp ')[2].click()
             data = {
-                'id': form.get('test'),
+                'id': app_id,
                 'time': datetime.datetime.utcnow(),
-                #         {'id': data['id'],
-                #          # 'hl': data['hl'],
-                #          'time': data['time'],
-                #          # 'identity': data,
-                #          # 'contacts': data,
-                #          # 'location': data,
-                #          # 'phone': data,
-                #          # 'pmf': data['Photos/Media/Files'],
-                #          # 'storage': data,
-                #          # 'camera': data,
-                #          # 'microphone': data,
-                #          # 'wifi': data['Wi-Fi connection information'],
-                #          # 'device_information': data['Device ID & call information'],
-                #          # 'phone2': data['Phone2'],
-                #          # 'other': data['Other'],
-                #          }
             }
-            # запись в базу
+            app_name = driver.find_element_by_class_name("AHFaub").text
+            permissions = {'app_name': app_name}
+            block_permissions = driver.find_elements_by_class_name("yk0PFc")
+            for e in block_permissions:
+                key_block = e.find_element_by_class_name("BR7Zgd").text
+                val_block = [entry.text for entry in e.find_elements_by_tag_name('li')]
+                permissions.update({key_block: val_block})
+            up_data = json.dumps(permissions, ensure_ascii=False)
+            data.update({'app_data': json_util.loads(up_data)})
             entry = Entry(self.mongo)
             await entry.save(data=data)
+            driver.quit()
             #забирать данные из базы, писать в переменную и отправлять в шаблон с таблицей
             return redirect(request, 'index')
         else:
